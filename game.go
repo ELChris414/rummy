@@ -3,27 +3,27 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/inancgumus/screen"
 )
 
 type card struct {
-	color  rune
+	color  int // 0 black, 1 yellow, 2 blue, 3 red, 4 emptyJokerB, 5 emptyJokerR
 	number int
+	joker  int // 0 no joker, 1 blackJoker, 2 redJoker
 }
 
 var (
-	players    int
-	board      [][]card
-	hands      [][]card
-	pool       []card
-	hold       []card
-	turn       int = 0
-	rounds     int = 0
-	jokerRed   card
-	jokerBlack card
-	laid       []bool
+	players int
+	board   [][]card
+	hands   [][]card
+	pool    []card
+	turn    int = 0
+	rounds  int = 0
+	laid    []bool
 )
 
 func remove(s []card, i int) []card {
@@ -32,19 +32,15 @@ func remove(s []card, i int) []card {
 }
 
 func setupCards() {
-	colors := []rune{'b', 'y', 'u', 'r'}
-	// b Black
-	// y Yellow
-	// u Blue
-	// r Red
+	colors := []int{0, 1, 2, 3}
 	for i := 1; i < 14; i++ {
 		for _, c := range colors {
-			pool = append(pool, card{c, i})
-			pool = append(pool, card{c, i})
+			pool = append(pool, card{c, i, 0})
+			pool = append(pool, card{c, i, 0})
 		}
 	}
-	pool = append(pool, card{'j', 0})
-	pool = append(pool, card{'j', 1})
+	pool = append(pool, card{4, 0, 1})
+	pool = append(pool, card{5, 0, 2})
 }
 
 func initializeGame() {
@@ -52,10 +48,15 @@ func initializeGame() {
 	setupCards()
 
 	fmt.Println("How many players are going to play? (2-4)")
-	_, err := fmt.Scanln(&players)
+	scanner.Scan()
+	num := scanner.Text()
+	players, err := strconv.Atoi(num)
+	fmt.Println(err)
 	for err != nil || players > 4 || players < 2 {
 		fmt.Println("Repeat answer")
-		_, err = fmt.Scanln(&players)
+		scanner.Scan()
+		num := scanner.Text()
+		players, err = strconv.Atoi(num)
 	}
 
 	rand.Seed(time.Now().UnixNano())
@@ -73,8 +74,8 @@ func initializeGame() {
 }
 
 func hasWon() int {
-	for i := 0; i < players; i++ {
-		if len(hands[i]) == 0 {
+	for i, h := range hands {
+		if len(h) == 0 {
 			return i
 		}
 	}
@@ -86,7 +87,7 @@ func startGame() {
 	for won == -1 {
 		playTurn()
 		turn++
-		if turn == players {
+		if turn == players-1 {
 			turn = 0
 		}
 	}
@@ -105,25 +106,255 @@ func playTurn() {
 	fmt.Printf("Currently playing: Player %s\n", playerLet[turn])
 	fmt.Printf("Cards on board: %v\n", len(pool))
 	fmt.Printf("Round: %v\n\n", rounds)
-	renderBoard()
-	renderHand()
+	renderBoard(board)
+	renderHand(hands[turn])
 	fmt.Print("Possible actions: ")
 	if !isPoolEmpty() {
 		fmt.Print(" draw ")
 	}
-	fmt.Println(" move ")
-	var action string
+	fmt.Println(" play ")
 	done := false
 	for !done {
-		fmt.Scanln(&action)
+		scanner.Scan()
+		action := scanner.Text()
+		action = strings.ToLower(action)
+		action = strings.TrimSpace(action)
 		switch action {
 		case "draw":
 			draw()
 			done = true
+		case "play":
+			done = play()
 		default:
 			fmt.Println("Incorrect command, try again.")
 		}
 	}
+}
+
+func play() bool {
+	var cpHand [][]card
+	var cpBoard [][][]card
+	var hold [][]card = [][]card{{}}
+	var actions []string
+	done := false
+
+	cpBoard = append(cpBoard, board)
+	cpHand = append(cpHand, hands[turn])
+
+	for !done {
+		//screen.Clear()
+		renderBoard(cpBoard[len(cpBoard)-1])
+		renderHand(cpHand[len(cpHand)-1])
+		fmt.Print("Let's play! Give commands. Possible commands:  add  place  pick  restart  undo  exit")
+		if len(hold[len(hold)-1]) == 0 {
+			fmt.Print("  done")
+		}
+		fmt.Println()
+		scanner.Scan()
+		action := scanner.Text()
+		action = strings.ToLower(action)
+		command := strings.Split(action, " ")
+		switch command[0] {
+		case "add":
+			if len(command) != 3 {
+				fmt.Println("Insufficient amount of arguments.")
+				break
+			}
+			h := cpHand[len(cpHand)-1]
+			b := cpBoard[len(cpBoard)-1]
+			if add(command[1], command[2], &h, &b) {
+				actions = append(actions, action)
+				fmt.Println()
+			} else {
+				fmt.Println("Incorrect arguments.")
+			}
+		case "place":
+			if len(command) < 3 {
+				fmt.Println("Insufficient amount of arguments.")
+				break
+			}
+			h := cpHand[len(cpHand)-1]
+			b := cpBoard[len(cpBoard)-1]
+			items := command[1:]
+			if place(items, &h, &b) {
+				actions = append(actions, action)
+				cpHand = append(cpHand, h)
+				cpBoard = append(cpBoard, b)
+				fmt.Println(cpBoard)
+			} else {
+				fmt.Println("Incorrect arguments.")
+			}
+		}
+
+	}
+	if len(cpHand[len(cpHand)-1]) < len(hands[turn]) {
+		hands[turn] = cpHand[len(cpHand)-1]
+		board = cpBoard[len(cpBoard)-1]
+		return true
+	}
+	return false
+}
+
+func add(item string, to string, h *[]card, b *[][]card) bool {
+	bc := *b
+	c, fail := processItem(item)
+	if fail == 1 {
+		return false
+	}
+	num, err := strconv.Atoi(to)
+	if err != nil {
+		return false
+	}
+	if num >= 0 && num < len(bc) {
+		return false
+	}
+	if isIn(c, *h) == -1 {
+		return false
+	}
+	if isValid(append(bc[num], c)) {
+		return true
+	} else if isValid(append([]card{c}, bc[num]...)) {
+		return true
+	}
+	return false
+}
+
+func place(items []string, h *[]card, b *[][]card) bool {
+	var cs []card
+	var ci []int
+	for _, item := range items {
+		c, fail := processItem(item)
+		if fail == 1 {
+			fmt.Println("Process failed")
+			return false
+		}
+		i := isIn(c, *h)
+		if i == -1 {
+			fmt.Println("In check failed")
+			return false
+		}
+		ci = append(ci, i)
+		cs = append(cs, c)
+	}
+	if isValid(cs) {
+		for _, i := range ci {
+			*h = remove(*h, i)
+		}
+		*b = append(*b, cs)
+		return true
+	}
+	return false
+}
+
+func isValid(b []card) bool {
+	validRun := true
+	validGroup := true
+	if len(b) < 3 {
+		return false
+	}
+	color := b[0].color
+	count := b[0].number
+	colors := []bool{false, false, false, false} // black, yellow, blue, red
+	for i := 1; i < len(b); i++ {
+		if b[i].color == color && b[i].number == count+1 {
+			count++
+		} else {
+			validRun = false
+		}
+		if !colors[b[i].color] {
+			colors[b[i].color] = true
+		} else {
+			validGroup = false
+		}
+	}
+	if validRun || validGroup {
+		return true
+	}
+	return false
+}
+
+func isIn(c card, h []card) int {
+	for i, a := range h {
+		if c == a || (a.color == -1 && c.joker != 0) {
+			return i
+		}
+	}
+	return -1
+}
+
+func processItem(item string) (card, int) {
+	// Normal items:
+	// b_11
+	// Empty jokers:
+	// jr
+	// Signed jokers:
+	// jr_y_8
+	var c card
+	c.joker = 0
+	items := strings.Split(item, "_")
+	l := len(items)
+	if l > 3 {
+		return c, 1
+	}
+	color := whatColor(items[0])
+	switch color {
+	case 0, 1, 2, 3:
+		if l != 2 {
+			return c, 1
+		}
+		n, err := strconv.Atoi(items[1])
+		if err != nil {
+			return c, 1
+		}
+		if n < 1 || n > 13 {
+			return c, 1
+		}
+		c.color = color
+		c.number = n
+	case 4:
+		c.joker = 1
+		if l == 1 {
+			c.color = -1
+			c.number = 0
+		} else if l == 3 {
+			switch whatColor(items[1]) {
+			case 0, 1, 2, 3:
+				n, err := strconv.Atoi(items[2])
+				if err != nil {
+					return c, 1
+				}
+				if n < 1 || n > 13 {
+					return c, 1
+				}
+				c.number = n
+			default:
+				return c, 1
+			}
+		} else {
+			return c, 1
+		}
+	default:
+		return c, 1
+	}
+	return c, 0
+}
+
+func whatColor(c string) int {
+	switch c {
+	case "b", "black":
+		return 0
+	case "y", "yellow":
+		return 1
+	case "u", "blue":
+		return 2
+	case "r", "red":
+		return 3
+	case "jb", "jokerblack":
+		return 4
+	case "jr", "jokerred":
+		return 5
+	}
+	return -1
 }
 
 func draw() {

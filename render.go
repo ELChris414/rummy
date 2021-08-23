@@ -26,16 +26,16 @@ func setupColors() {
 	counter = color.New(color.BgBlack).Add(color.FgWhite)
 }
 
-func renderBoard() {
-	for i := 0; i < len(board); i++ {
+func renderBoard(b [][]card) {
+	for i := 0; i < len(b); i++ {
 		counter.Print(i)
-		printCards(board[i])
+		printCards(b[i])
 	}
 }
 
-func renderHand() {
+func renderHand(cards []card) {
 	fmt.Println("\nPlayer's hand:")
-	printCards(hands[turn])
+	printCards(cards)
 }
 
 func printCards(cards []card) {
@@ -48,20 +48,22 @@ func printCards(cards []card) {
 }
 
 func printCard(c card) {
+	switch c.joker {
+	case 1:
+		black.Print("J")
+		return
+	case 2:
+		red.Print("J")
+		return
+	}
 	switch c.color {
-	case 'r':
-		red.Print(c.number)
-	case 'b':
+	case 0:
 		black.Print(c.number)
-	case 'y':
+	case 1:
 		yellow.Print(c.number)
-	case 'u':
+	case 2:
 		blue.Print(c.number)
-	case 'j':
-		if c.number == 0 {
-			black.Print("J")
-		} else {
-			red.Print("J")
-		}
+	case 3:
+		red.Print(c.number)
 	}
 }
