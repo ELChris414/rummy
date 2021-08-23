@@ -26,9 +26,14 @@ var (
 	laid    []bool
 )
 
-func remove(s []card, i int) []card {
+func removei(s []card, i int) []card {
 	s[i] = s[len(s)-1]
 	return s[:len(s)-1]
+}
+
+func remove(s []card, c card) []card {
+	i := isIn(c, s)
+	return removei(s, i)
 }
 
 func setupCards() {
@@ -44,13 +49,14 @@ func setupCards() {
 }
 
 func initializeGame() {
+	var err error
 	setupColors()
 	setupCards()
 
 	fmt.Println("How many players are going to play? (2-4)")
 	scanner.Scan()
 	num := scanner.Text()
-	players, err := strconv.Atoi(num)
+	players, err = strconv.Atoi(num)
 	fmt.Println(err)
 	for err != nil || players > 4 || players < 2 {
 		fmt.Println("Repeat answer")
@@ -67,7 +73,7 @@ func initializeGame() {
 			randomIndex := rand.Intn(len(pool))
 			pick := pool[randomIndex]
 			hand = append(hand, pick)
-			pool = remove(pool, randomIndex)
+			pool = removei(pool, randomIndex)
 		}
 		hands = append(hands, hand)
 	}
@@ -87,7 +93,7 @@ func startGame() {
 	for won == -1 {
 		playTurn()
 		turn++
-		if turn == players-1 {
+		if turn == players {
 			turn = 0
 		}
 	}
@@ -144,7 +150,9 @@ func play() bool {
 	for !done {
 		//screen.Clear()
 		renderBoard(cpBoard[len(cpBoard)-1])
+		renderActions(actions)
 		renderHand(cpHand[len(cpHand)-1])
+		renderHold(hold[len(hold)-1])
 		fmt.Print("Let's play! Give commands. Possible commands:  add  place  pick  restart  undo  exit")
 		if len(hold[len(hold)-1]) == 0 {
 			fmt.Print("  done")
@@ -180,7 +188,6 @@ func play() bool {
 				actions = append(actions, action)
 				cpHand = append(cpHand, h)
 				cpBoard = append(cpBoard, b)
-				fmt.Println(cpBoard)
 			} else {
 				fmt.Println("Incorrect arguments.")
 			}
@@ -221,24 +228,21 @@ func add(item string, to string, h *[]card, b *[][]card) bool {
 
 func place(items []string, h *[]card, b *[][]card) bool {
 	var cs []card
-	var ci []int
 	for _, item := range items {
 		c, fail := processItem(item)
 		if fail == 1 {
 			fmt.Println("Process failed")
 			return false
 		}
-		i := isIn(c, *h)
-		if i == -1 {
+		if isIn(c, *h) == -1 {
 			fmt.Println("In check failed")
 			return false
 		}
-		ci = append(ci, i)
 		cs = append(cs, c)
 	}
 	if isValid(cs) {
-		for _, i := range ci {
-			*h = remove(*h, i)
+		for _, c := range cs {
+			*h = remove(*h, c)
 		}
 		*b = append(*b, cs)
 		return true
@@ -362,7 +366,7 @@ func draw() {
 	randomIndex := rand.Intn(len(pool))
 	pick := pool[randomIndex]
 	hands[turn] = append(hands[turn], pick)
-	pool = remove(pool, randomIndex)
+	pool = removei(pool, randomIndex)
 	fmt.Print("You drew: ")
 	printCard(pick)
 	fmt.Println("\nYour new hand is:")
