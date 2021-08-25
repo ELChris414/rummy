@@ -18,7 +18,7 @@ type card struct {
 }
 
 const (
-	initialCards = 14
+	initialCards = 40
 )
 
 var (
@@ -301,7 +301,6 @@ func add(item string, to string, h []card, b [][]card) (bool, []card, [][]card, 
 func place(items []string, h []card, b [][]card) (bool, []card, [][]card, int) {
 	var cs []card
 	tot := 0
-	printCards(h)
 	for _, item := range items {
 		c, fail := processItem(item)
 		if fail == 1 {
@@ -332,11 +331,16 @@ func isValid(b []card) bool {
 	color := b[0].color
 	count := b[0].number
 	colors := []bool{false, false, false, false} // black, yellow, blue, red
+	num := b[0].number
+	colors[color] = true
 	for i := 1; i < len(b); i++ {
 		if b[i].color == color && b[i].number == count+1 {
 			count++
 		} else {
 			validRun = false
+		}
+		if b[i].number != num {
+			validGroup = false
 		}
 		if !colors[b[i].color] {
 			colors[b[i].color] = true
@@ -352,7 +356,7 @@ func isValid(b []card) bool {
 
 func isIn(c card, h []card) int {
 	for i, a := range h {
-		if c == a || (a.color == -1 && c.joker != 0) {
+		if c == a || (c.joker == a.joker && c.joker != 0) {
 			return i
 		}
 	}
@@ -388,13 +392,18 @@ func processItem(item string) (card, int) {
 		}
 		c.color = color
 		c.number = n
-	case 4:
-		c.joker = 1
+	case 4, 5:
+		if color == 4 {
+			c.joker = 1
+		} else {
+			c.joker = 2
+		}
 		if l == 1 {
 			c.color = -1
 			c.number = 0
 		} else if l == 3 {
-			switch whatColor(items[1]) {
+			c.color = whatColor(items[1])
+			switch c.color {
 			case 0, 1, 2, 3:
 				n, err := strconv.Atoi(items[2])
 				if err != nil {

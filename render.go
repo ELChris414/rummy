@@ -56,13 +56,31 @@ func printCards(cards []card) {
 }
 
 func printCard(c card) {
-	switch c.joker {
-	case 1:
-		black.Print("J")
-		return
-	case 2:
-		red.Print("J")
-		return
+	// Needs rewriting
+	if c.number != 0 {
+		switch c.joker {
+		case 1:
+			c.joker = 0
+			black.Print("J(")
+			printCard(c)
+			black.Print(")")
+			return
+		case 2:
+			c.joker = 0
+			red.Print("J(")
+			printCard(c)
+			red.Print(")")
+			return
+		}
+	} else {
+		switch c.joker {
+		case 1:
+			black.Print("J")
+			return
+		case 2:
+			red.Print("J")
+			return
+		}
 	}
 	switch c.color {
 	case 0:
