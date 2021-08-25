@@ -153,6 +153,9 @@ func play() bool {
 	var actions []string
 	var total []int = []int{0}
 	var tot int
+	var h []card
+	var ho []card
+	var b [][]card
 	done := false
 
 	cpBoard = append(cpBoard, board)
@@ -179,6 +182,16 @@ func play() bool {
 		action := scanner.Text()
 		action = strings.ToLower(action)
 		command := strings.Split(action, " ")
+
+		h = make([]card, len(cpHand[len(cpHand)-1]))
+		b = make([][]card, len(cpBoard[len(cpBoard)-1]))
+		ho = make([]card, len(hold[len(hold)-1]))
+
+		copy(h, cpHand[len(cpHand)-1])
+		copy(b, cpBoard[len(cpBoard)-1])
+		copy(ho, hold[len(hold)-1])
+
+		success := false
 		switch command[0] {
 		case "add":
 			if total[len(total)-1] < 30 && !laid[turn] {
@@ -189,10 +202,8 @@ func play() bool {
 				fmt.Println("Insufficient amount of arguments.")
 				break
 			}
-			h := cpHand[len(cpHand)-1]
-			b := cpBoard[len(cpBoard)-1]
-			ho := hold[len(hold)-1]
-			if add(command[1], command[2], &h, &b, &tot) {
+			success, h, b, tot = add(command[1], command[2], h, b)
+			if success {
 				actions = append(actions, action)
 				cpHand = append(cpHand, sortHand(h))
 				cpBoard = append(cpBoard, b)
@@ -207,11 +218,9 @@ func play() bool {
 				fmt.Println("Insufficient amount of arguments.")
 				break
 			}
-			h := cpHand[len(cpHand)-1]
-			b := cpBoard[len(cpBoard)-1]
 			items := command[1:]
-			ho := hold[len(hold)-1]
-			if place(items, &h, &b, &tot) {
+			success, h, b, tot = place(items, h, b)
+			if success {
 				actions = append(actions, action)
 				cpHand = append(cpHand, sortHand(h))
 				cpBoard = append(cpBoard, b)
@@ -235,6 +244,8 @@ func play() bool {
 			hold = [][]card{{}}
 			total = []int{0}
 			fmt.Println("Restarted.")
+		case "print":
+			renderBoard(cpHand)
 		default:
 			fmt.Println("Incorrect command, try again.")
 		}
@@ -248,60 +259,59 @@ func play() bool {
 	return false
 }
 
-func add(item string, to string, h *[]card, b *[][]card, tot *int) bool {
-	bc := *b
+func add(item string, to string, h []card, b [][]card) (bool, []card, [][]card, int) {
+	var tot int
 	c, fail := processItem(item)
 	if fail == 1 {
-		return false
+		return false, h, b, tot
 	}
 	num, err := strconv.Atoi(to)
 	if err != nil {
-		return false
+		return false, h, b, tot
 	}
-	if num < 0 || num >= len(bc) {
-		return false
+	if num < 0 || num >= len(b) {
+		return false, h, b, tot
 	}
-	if isIn(c, *h) == -1 {
-		return false
+	if isIn(c, h) == -1 {
+		return false, h, b, tot
 	}
-	if isValid(append(bc[num], c)) {
-		*h = remove(*h, c)
-		bc[num] = append(bc[num], c)
-		*b = bc
-		*tot = c.number
-		return true
-	} else if isValid(append([]card{c}, bc[num]...)) {
-		*h = remove(*h, c)
-		bc[num] = append([]card{c}, bc[num]...)
-		*b = bc
-		*tot = c.number
-		return true
+	if isValid(append(b[num], c)) {
+		h = remove(h, c)
+		b[num] = append(b[num], c)
+		tot = c.number
+		return true, h, b, tot
+	} else if isValid(append([]card{c}, b[num]...)) {
+		h = remove(h, c)
+		b[num] = append([]card{c}, b[num]...)
+		tot = c.number
+		return true, h, b, tot
 	}
-	return false
+	return false, h, b, tot
 }
 
-func place(items []string, h *[]card, b *[][]card, tot *int) bool {
+func place(items []string, h []card, b [][]card) (bool, []card, [][]card, int) {
 	var cs []card
-	*tot = 0
+	tot := 0
+	printCards(h)
 	for _, item := range items {
 		c, fail := processItem(item)
 		if fail == 1 {
-			return false
+			return false, h, b, tot
 		}
-		if isIn(c, *h) == -1 {
-			return false
+		if isIn(c, h) == -1 {
+			return false, h, b, tot
 		}
 		cs = append(cs, c)
 	}
 	if isValid(cs) {
 		for _, c := range cs {
-			*h = remove(*h, c)
-			*tot += c.number
+			h = remove(h, c)
+			tot += c.number
 		}
-		*b = append(*b, cs)
-		return true
+		b = append(b, cs)
+		return true, h, b, tot
 	}
-	return false
+	return false, h, b, tot
 }
 
 func isValid(b []card) bool {
