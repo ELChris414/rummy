@@ -118,3 +118,9 @@ func printAction(action string) {
 	// For pick it must show the whole sequence of num card card card
 	// So example: Player grabbed [card] from [num] [card] [card] [card]
 }
+
+func renderScores(scores []int) {
+	for i := 0; i < players; i++ {
+		fmt.Printf("Player %s: %v\n", playerLet[i], scores[i])
+	}
+}

@@ -18,7 +18,7 @@ type card struct {
 }
 
 const (
-	initialCards = 40
+	initialCards = 14
 )
 
 var (
@@ -105,11 +105,32 @@ func startGame() {
 			turn = 0
 			rounds++
 		}
+		won = hasWon()
 	}
 	fmt.Printf("Player %s has won the game!\n", playerLet[won])
 	fmt.Printf("Game finished in %v rounds\n", rounds)
 	fmt.Println("Final board:")
+	renderBoard(board)
+	fmt.Println("\nScores:")
+	scores := calculateScores(won)
+	renderScores(scores)
+}
 
+func calculateScores(won int) []int {
+	scores := []int{0, 0, 0, 0}
+	sum := 0
+	for i := 0; i < players; i++ {
+		for _, c := range hands[i] {
+			if c.joker != 0 {
+				scores[i] -= 30
+			} else {
+				scores[i] -= c.number
+			}
+		}
+		sum -= scores[i]
+	}
+	scores[won] = sum
+	return scores
 }
 
 func isPoolEmpty() bool {
