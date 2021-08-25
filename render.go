@@ -29,7 +29,7 @@ func setupColors() {
 
 func renderBoard(b [][]card) {
 	for i := 0; i < len(b); i++ {
-		counter.Print(i)
+		counter.Print(i + 1)
 		printCards(b[i])
 	}
 }

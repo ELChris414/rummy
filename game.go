@@ -96,10 +96,14 @@ func hasWon() int {
 func startGame() {
 	won := hasWon()
 	for won == -1 {
+		screen.Clear()
+		fmt.Printf("Player %s's turn, press enter to play.\n", playerLet[turn])
+		scanner.Scan()
 		playTurn()
 		turn++
 		if turn == players {
 			turn = 0
+			rounds++
 		}
 	}
 	fmt.Printf("Player %s has won the game!\n", playerLet[won])
@@ -112,41 +116,7 @@ func isPoolEmpty() bool {
 	return len(pool) == 0
 }
 
-func playTurn() {
-	screen.Clear()
-	fmt.Printf("Currently playing: Player %s\n", playerLet[turn])
-	fmt.Printf("Cards on board: %v\n", len(pool))
-	fmt.Printf("Round: %v\n\n", rounds)
-	renderBoard(board)
-	renderHand(hands[turn])
-	fmt.Print("Possible actions: ")
-	if !isPoolEmpty() {
-		fmt.Print(" draw ")
-	}
-	fmt.Println(" play ")
-	done := false
-	for !done {
-		scanner.Scan()
-		action := scanner.Text()
-		action = strings.ToLower(action)
-		action = strings.TrimSpace(action)
-		switch action {
-		case "draw":
-			if isPoolEmpty() {
-				fmt.Println("No more cards left in the pool.")
-				continue
-			}
-			draw()
-			done = true
-		case "play":
-			done = play()
-		default:
-			fmt.Println("Incorrect command, try again.")
-		}
-	}
-}
-
-func play() bool {
+func playTurn() bool {
 	var cpHand [][]card
 	var cpBoard [][][]card
 	var hold [][]card = [][]card{{}}
@@ -156,26 +126,31 @@ func play() bool {
 	var h []card
 	var ho []card
 	var b [][]card
-	done := false
 
 	cpBoard = append(cpBoard, board)
 	cpHand = append(cpHand, hands[turn])
 
-	for !done {
-		//screen.Clear()
+	for {
+		screen.Clear()
+		fmt.Printf("Currently playing: Player %s\n", playerLet[turn])
+		fmt.Printf("Cards on board: %v\n", len(pool))
+		fmt.Printf("Round: %v\n\n", rounds)
 		renderBoard(cpBoard[len(cpBoard)-1])
 		renderActions(actions, total[len(total)-1])
 		renderHand(cpHand[len(cpHand)-1])
 		renderHold(hold[len(hold)-1])
-		fmt.Print("Let's play! Give commands. Possible commands:  place  exit")
+		fmt.Print("Let's play! Give commands. Possible commands:  place")
 		if total[len(total)-1] >= 30 || laid[turn] {
 			fmt.Print("  add  pick")
 		}
 		if len(cpHand) > 1 {
 			fmt.Print("  restart  undo")
 		}
-		if len(hold[len(hold)-1]) == 0 {
+		if len(hold[len(hold)-1]) == 0 && len(cpHand) != 1 {
 			fmt.Print("  done")
+		}
+		if !isPoolEmpty() {
+			fmt.Print("  draw")
 		}
 		fmt.Println()
 		scanner.Scan()
@@ -207,7 +182,7 @@ func play() bool {
 				actions = append(actions, action)
 				cpHand = append(cpHand, sortHand(h))
 				cpBoard = append(cpBoard, b)
-				total = append(total, tot)
+				total = append(total, total[len(total)-1]+tot)
 				hold = append(hold, ho)
 				fmt.Println()
 			} else {
@@ -238,25 +213,37 @@ func play() bool {
 			hold = hold[:len(hold)-1]
 			fmt.Println("Undid last step.")
 		case "restart":
-			actions = []string{}
-			cpBoard = append(cpBoard, board)
-			cpHand = append(cpHand, hands[turn])
-			hold = [][]card{{}}
-			total = []int{0}
+			actions = actions[:0]
+			cpHand = cpHand[:1]
+			cpBoard = cpBoard[:1]
+			total = total[:1]
+			hold = hold[:1]
 			fmt.Println("Restarted.")
-		case "print":
-			renderBoard(cpHand)
+		case "draw":
+			if !isPoolEmpty() {
+				draw()
+				return true
+			} else {
+				fmt.Println("No more cards in the pool!")
+			}
+		case "done":
+			if len(hold[len(hold)-1]) == 0 && len(cpHand) != 1 {
+				if total[len(total)-1] < 30 && !laid[turn] {
+					fmt.Println("Initial placements not done yet.")
+					break
+				} else {
+					hands[turn] = cpHand[len(cpHand)-1]
+					board = cpBoard[len(cpBoard)-1]
+					laid[turn] = true
+					return true
+				}
+			} else {
+				fmt.Println("You're not permitted to finish yet.")
+			}
 		default:
 			fmt.Println("Incorrect command, try again.")
 		}
-
 	}
-	if len(cpHand[len(cpHand)-1]) < len(hands[turn]) {
-		hands[turn] = cpHand[len(cpHand)-1]
-		board = cpBoard[len(cpBoard)-1]
-		return true
-	}
-	return false
 }
 
 func add(item string, to string, h []card, b [][]card) (bool, []card, [][]card, int) {
@@ -269,6 +256,7 @@ func add(item string, to string, h []card, b [][]card) (bool, []card, [][]card, 
 	if err != nil {
 		return false, h, b, tot
 	}
+	num--
 	if num < 0 || num >= len(b) {
 		return false, h, b, tot
 	}
