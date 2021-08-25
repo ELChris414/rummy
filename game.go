@@ -17,6 +17,10 @@ type card struct {
 	joker  int // 0 no joker, 1 blackJoker, 2 redJoker
 }
 
+const (
+	initialCards = 40
+)
+
 var (
 	players int
 	board   [][]card
@@ -70,7 +74,7 @@ func initializeGame() {
 
 	for i := 0; i < players; i++ {
 		var hand []card
-		for y := 0; y < 20; y++ {
+		for y := 0; y < initialCards; y++ {
 			randomIndex := rand.Intn(len(pool))
 			pick := pool[randomIndex]
 			hand = append(hand, pick)
@@ -160,7 +164,13 @@ func play() bool {
 		renderActions(actions, total[len(total)-1])
 		renderHand(cpHand[len(cpHand)-1])
 		renderHold(hold[len(hold)-1])
-		fmt.Print("Let's play! Give commands. Possible commands:  add  place  pick  restart  undo  exit")
+		fmt.Print("Let's play! Give commands. Possible commands:  place  exit")
+		if total[len(total)-1] >= 30 || laid[turn] {
+			fmt.Print("  add  pick")
+		}
+		if len(cpHand) > 1 {
+			fmt.Print("  restart  undo")
+		}
 		if len(hold[len(hold)-1]) == 0 {
 			fmt.Print("  done")
 		}
@@ -171,17 +181,23 @@ func play() bool {
 		command := strings.Split(action, " ")
 		switch command[0] {
 		case "add":
+			if total[len(total)-1] < 30 && !laid[turn] {
+				fmt.Println("Initial placements not done yet.")
+				break
+			}
 			if len(command) != 3 {
 				fmt.Println("Insufficient amount of arguments.")
 				break
 			}
 			h := cpHand[len(cpHand)-1]
 			b := cpBoard[len(cpBoard)-1]
+			ho := hold[len(hold)-1]
 			if add(command[1], command[2], &h, &b, &tot) {
 				actions = append(actions, action)
 				cpHand = append(cpHand, sortHand(h))
 				cpBoard = append(cpBoard, b)
 				total = append(total, tot)
+				hold = append(hold, ho)
 				fmt.Println()
 			} else {
 				fmt.Println("Incorrect arguments.")
@@ -194,15 +210,31 @@ func play() bool {
 			h := cpHand[len(cpHand)-1]
 			b := cpBoard[len(cpBoard)-1]
 			items := command[1:]
+			ho := hold[len(hold)-1]
 			if place(items, &h, &b, &tot) {
 				actions = append(actions, action)
 				cpHand = append(cpHand, sortHand(h))
 				cpBoard = append(cpBoard, b)
-				total = append(total, tot)
+				total = append(total, total[len(total)-1]+tot)
+				hold = append(hold, ho)
 				fmt.Println()
 			} else {
 				fmt.Println("Incorrect arguments.")
 			}
+		case "undo":
+			actions = actions[:len(actions)-1]
+			cpHand = cpHand[:len(cpHand)-1]
+			cpBoard = cpBoard[:len(cpBoard)-1]
+			total = total[:len(total)-1]
+			hold = hold[:len(hold)-1]
+			fmt.Println("Undid last step.")
+		case "restart":
+			actions = []string{}
+			cpBoard = append(cpBoard, board)
+			cpHand = append(cpHand, hands[turn])
+			hold = [][]card{{}}
+			total = []int{0}
+			fmt.Println("Restarted.")
 		default:
 			fmt.Println("Incorrect command, try again.")
 		}
@@ -401,12 +433,12 @@ func sortHand(h []card) []card {
 	// First by color, then by ascending number
 	// Last cards are jokers
 	sort.Slice(h, func(i, j int) bool {
-		return h[i].joker == 0
+		return h[i].joker != 0
 	})
 	sort.Slice(h, func(i, j int) bool {
-		if h[i].joker != 0 || h[j].joker != 0 {
+		/*if h[i].joker != 0 || h[j].joker != 0 {
 			return false
-		}
+		}*/
 		if h[i].color < h[j].color {
 			return true
 		} else if h[i].color > h[j].color {
