@@ -76,13 +76,20 @@ func printCard(c card) {
 	}
 }
 
-func renderActions(actions []string) {
+func renderActions(actions []string, total int) {
 	fmt.Println()
 	if len(actions) != 0 {
 		fmt.Println("Current Actions:")
 		for i, action := range actions {
 			fmt.Printf("%v. ", i+1)
 			printAction(action)
+		}
+		if !laid[turn] {
+			fmt.Printf("Total: %v", total)
+			if total >= 30 {
+				fmt.Print(", valid to submit")
+			}
+			fmt.Println()
 		}
 	}
 }
