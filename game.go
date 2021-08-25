@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -57,7 +58,7 @@ func initializeGame() {
 	scanner.Scan()
 	num := scanner.Text()
 	players, err = strconv.Atoi(num)
-	fmt.Println(err)
+	//fmt.Println(err)
 	for err != nil || players > 4 || players < 2 {
 		fmt.Println("Repeat answer")
 		scanner.Scan()
@@ -69,13 +70,13 @@ func initializeGame() {
 
 	for i := 0; i < players; i++ {
 		var hand []card
-		for y := 0; y < 14; y++ {
+		for y := 0; y < 20; y++ {
 			randomIndex := rand.Intn(len(pool))
 			pick := pool[randomIndex]
 			hand = append(hand, pick)
 			pool = removei(pool, randomIndex)
 		}
-		hands = append(hands, hand)
+		hands = append(hands, sortHand(hand))
 	}
 }
 
@@ -127,6 +128,10 @@ func playTurn() {
 		action = strings.TrimSpace(action)
 		switch action {
 		case "draw":
+			if isPoolEmpty() {
+				fmt.Println("No more cards left in the pool.")
+				continue
+			}
 			draw()
 			done = true
 		case "play":
@@ -172,6 +177,8 @@ func play() bool {
 			b := cpBoard[len(cpBoard)-1]
 			if add(command[1], command[2], &h, &b) {
 				actions = append(actions, action)
+				cpHand = append(cpHand, sortHand(h))
+				cpBoard = append(cpBoard, b)
 				fmt.Println()
 			} else {
 				fmt.Println("Incorrect arguments.")
@@ -186,7 +193,7 @@ func play() bool {
 			items := command[1:]
 			if place(items, &h, &b) {
 				actions = append(actions, action)
-				cpHand = append(cpHand, h)
+				cpHand = append(cpHand, sortHand(h))
 				cpBoard = append(cpBoard, b)
 			} else {
 				fmt.Println("Incorrect arguments.")
@@ -212,15 +219,21 @@ func add(item string, to string, h *[]card, b *[][]card) bool {
 	if err != nil {
 		return false
 	}
-	if num >= 0 && num < len(bc) {
+	if num < 0 || num >= len(bc) {
 		return false
 	}
 	if isIn(c, *h) == -1 {
 		return false
 	}
 	if isValid(append(bc[num], c)) {
+		*h = remove(*h, c)
+		bc[num] = append(bc[num], c)
+		*b = bc
 		return true
 	} else if isValid(append([]card{c}, bc[num]...)) {
+		*h = remove(*h, c)
+		bc[num] = append([]card{c}, bc[num]...)
+		*b = bc
 		return true
 	}
 	return false
@@ -365,11 +378,33 @@ func draw() {
 	screen.Clear()
 	randomIndex := rand.Intn(len(pool))
 	pick := pool[randomIndex]
-	hands[turn] = append(hands[turn], pick)
+	hands[turn] = sortHand(append(hands[turn], pick))
 	pool = removei(pool, randomIndex)
 	fmt.Print("You drew: ")
 	printCard(pick)
 	fmt.Println("\nYour new hand is:")
 	printCards(hands[turn])
 	fmt.Scanln()
+}
+
+func sortHand(h []card) []card {
+	// Sorting algorithm
+	// First by color, then by ascending number
+	// Last cards are jokers
+	sort.Slice(h, func(i, j int) bool {
+		return h[i].joker != 0
+	})
+	sort.Slice(h, func(i, j int) bool {
+		/*if h[i].joker != 0 {			It failed to sort when both jokers were in the same hand
+			return true
+		}*/
+		if h[i].color < h[j].color {
+			return true
+		} else if h[i].color > h[j].color {
+			return false
+		}
+		return h[i].number < h[j].number
+	})
+
+	return h
 }

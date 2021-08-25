@@ -94,7 +94,9 @@ func printAction(action string) {
 	case "add":
 		fmt.Print("Player added ")
 		c, _ := processItem(command[1])
+		bg.Print(" ")
 		printCard(c)
+		bg.Print(" ")
 		fmt.Print(" at level ")
 		fmt.Println(command[2])
 	case "place":
@@ -106,5 +108,6 @@ func printAction(action string) {
 		}
 		printCards(cs)
 	}
-
+	// For pick it must show the whole sequence of num card card card
+	// So example: Player grabbed [card] from [num] [card] [card] [card]
 }
