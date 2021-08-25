@@ -167,7 +167,7 @@ func playTurn() bool {
 		if len(cpHand) > 1 {
 			fmt.Print("  restart  undo")
 		}
-		if len(hold[len(hold)-1]) == 0 && len(cpHand) != 1 {
+		if len(hold[len(hold)-1]) == 0 && len(cpHand) != 1 && !(total[len(total)-1] < 30 && !laid[turn]) {
 			fmt.Print("  done")
 		}
 		if !isPoolEmpty() {
