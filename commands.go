@@ -71,3 +71,32 @@ func draw() {
 	printCards(hands[turn])
 	fmt.Scanln()
 }
+
+func exchange(item string, to string, h []card, b [][]card, ho []card) (bool, []card, [][]card, []card) {
+	num, err := strconv.Atoi(to)
+	if err != nil {
+		return false, h, b, ho
+	}
+	num--
+	if num < 0 || num >= len(b) {
+		return false, h, b, ho
+	}
+	c, fail := processItem(item)
+	if fail == 1 {
+		return false, h, b, ho
+	}
+	cjok := c
+	cjok.joker = 1
+	i := isIn(cjok, b[num])
+	if i == -1 {
+		cjok.joker = 2
+	}
+	i = isIn(cjok, b[num])
+	if i == -1 {
+		return false, h, b, ho
+	}
+	h = remove(h, c)
+	b[num][i].joker = 0
+	ho = append(ho, cleanJoker(cjok))
+	return true, h, b, ho
+}

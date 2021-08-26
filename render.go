@@ -56,7 +56,6 @@ func printCards(cards []card) {
 }
 
 func printCard(c card) {
-	// Needs rewriting
 	switch c.joker {
 	case 0:
 		switch c.color {
@@ -108,12 +107,12 @@ func printAction(action string) {
 	switch command[0] {
 	case "add":
 		fmt.Print("Player added ")
-		bg.Print(" ")
+		var cs []card
 		for _, item := range command[2:] {
 			c, _ := processItem(item)
-			printCard(c)
-			bg.Print(" ")
+			cs = append(cs, c)
 		}
+		printCards(cs)
 		fmt.Print(" at level ")
 		fmt.Println(command[1])
 	case "place":
@@ -124,6 +123,14 @@ func printAction(action string) {
 			cs = append(cs, c)
 		}
 		printCards(cs)
+	case "exchange":
+		fmt.Print("Player exchanged ")
+		c, _ := processItem(command[1])
+		bg.Print(" ")
+		printCard(c)
+		bg.Print(" ")
+		fmt.Print(" with the joker at level ")
+		fmt.Println(command[2])
 	}
 	// For pick it must show the whole sequence of num card card card
 	// So example: Player grabbed [card] from [num] [card] [card] [card]

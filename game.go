@@ -221,6 +221,26 @@ func playTurn() bool {
 			} else {
 				fmt.Println("You're not permitted to finish yet.")
 			}
+		case "exchange":
+			if total[len(total)-1] < 30 && !laid[turn] {
+				fmt.Println("Initial placements not done yet.")
+				break
+			}
+			if len(command) != 3 {
+				fmt.Println("Insufficient amount of arguments.")
+				break
+			}
+			success, h, b, ho = exchange(command[1], command[2], h, b, ho)
+			if success {
+				actions = append(actions, action)
+				cpHand = append(cpHand, sortHand(h))
+				cpBoard = append(cpBoard, b)
+				total = append(total, total[len(total)-1])
+				hold = append(hold, ho)
+				fmt.Println()
+			} else {
+				fmt.Println("Incorrect arguments.")
+			}
 		default:
 			fmt.Println("Incorrect command, try again.")
 		}
