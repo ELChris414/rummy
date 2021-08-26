@@ -13,7 +13,7 @@ import (
 
 type card struct {
 	color  int // 0 black, 1 yellow, 2 blue, 3 red, 4 emptyJokerB, 5 emptyJokerR
-	number int
+	number int // 0 emptyJoker, 1-13 typical numbers
 	joker  int // 0 no joker, 1 blackJoker, 2 redJoker
 }
 
@@ -162,7 +162,7 @@ func playTurn() bool {
 		renderHold(hold[len(hold)-1])
 		fmt.Print("Let's play! Give commands. Possible commands:  place")
 		if total[len(total)-1] >= 30 || laid[turn] {
-			fmt.Print("  add  pick")
+			fmt.Print("  add  pick  exchange  pickall  break")
 		}
 		if len(cpHand) > 1 {
 			fmt.Print("  restart  undo")
@@ -194,16 +194,17 @@ func playTurn() bool {
 				fmt.Println("Initial placements not done yet.")
 				break
 			}
-			if len(command) != 3 {
+			if len(command) < 3 {
 				fmt.Println("Insufficient amount of arguments.")
 				break
 			}
-			success, h, b, tot = add(command[1], command[2], h, b)
+			items := command[2:]
+			success, h, b = add(items, command[1], h, b)
 			if success {
 				actions = append(actions, action)
 				cpHand = append(cpHand, sortHand(h))
 				cpBoard = append(cpBoard, b)
-				total = append(total, total[len(total)-1]+tot)
+				total = append(total, total[len(total)-1])
 				hold = append(hold, ho)
 				fmt.Println()
 			} else {
@@ -267,35 +268,29 @@ func playTurn() bool {
 	}
 }
 
-func add(item string, to string, h []card, b [][]card) (bool, []card, [][]card, int) {
-	var tot int
-	c, fail := processItem(item)
-	if fail == 1 {
-		return false, h, b, tot
-	}
+func add(items []string, to string, h []card, b [][]card) (bool, []card, [][]card) {
 	num, err := strconv.Atoi(to)
 	if err != nil {
-		return false, h, b, tot
+		return false, h, b
 	}
 	num--
 	if num < 0 || num >= len(b) {
-		return false, h, b, tot
+		return false, h, b
 	}
-	if isIn(c, h) == -1 {
-		return false, h, b, tot
-	}
-	if isValid(append(b[num], c)) {
-		h = remove(h, c)
+	for _, item := range items {
+		c, fail := processItem(item)
+		if fail == 1 {
+			return false, h, b
+		}
+		if isIn(c, h) == -1 {
+			return false, h, b
+		}
 		b[num] = append(b[num], c)
-		tot = c.number
-		return true, h, b, tot
-	} else if isValid(append([]card{c}, b[num]...)) {
-		h = remove(h, c)
-		b[num] = append([]card{c}, b[num]...)
-		tot = c.number
-		return true, h, b, tot
 	}
-	return false, h, b, tot
+	if isValid(sortHand(b[num])) {
+		return true, h, b
+	}
+	return false, h, b
 }
 
 func place(items []string, h []card, b [][]card) (bool, []card, [][]card, int) {
@@ -356,11 +351,20 @@ func isValid(b []card) bool {
 
 func isIn(c card, h []card) int {
 	for i, a := range h {
-		if c == a || (c.joker == a.joker && c.joker != 0) {
+		if c == a {
+			return i
+		}
+		if a.color >= 4 && c.joker == a.color-3 {
 			return i
 		}
 	}
 	return -1
+}
+
+func cleanJoker(c card) card {
+	c.number = 0
+	c.color = c.joker + 3
+	return c
 }
 
 func processItem(item string) (card, int) {

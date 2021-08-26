@@ -29,7 +29,7 @@ func setupColors() {
 
 func renderBoard(b [][]card) {
 	for i := 0; i < len(b); i++ {
-		counter.Print(i + 1)
+		counter.Printf("%v: ", i+1)
 		printCards(b[i])
 	}
 }
@@ -57,40 +57,30 @@ func printCards(cards []card) {
 
 func printCard(c card) {
 	// Needs rewriting
-	if c.number != 0 {
-		switch c.joker {
-		case 1:
-			c.joker = 0
-			black.Print("J(")
-			printCard(c)
-			black.Print(")")
-			return
-		case 2:
-			c.joker = 0
-			red.Print("J(")
-			printCard(c)
-			red.Print(")")
-			return
-		}
-	} else {
-		switch c.joker {
-		case 1:
-			black.Print("J")
-			return
-		case 2:
-			red.Print("J")
-			return
-		}
-	}
-	switch c.color {
+	switch c.joker {
 	case 0:
-		black.Print(c.number)
+		switch c.color {
+		case 0:
+			black.Print(c.number)
+		case 1:
+			yellow.Print(c.number)
+		case 2:
+			blue.Print(c.number)
+		case 3:
+			red.Print(c.number)
+		default:
+			return
+		}
 	case 1:
-		yellow.Print(c.number)
+		c.joker = 0
+		black.Print("J")
+		printCard(c)
+		return
 	case 2:
-		blue.Print(c.number)
-	case 3:
-		red.Print(c.number)
+		c.joker = 0
+		red.Print("J")
+		printCard(c)
+		return
 	}
 }
 
@@ -118,12 +108,14 @@ func printAction(action string) {
 	switch command[0] {
 	case "add":
 		fmt.Print("Player added ")
-		c, _ := processItem(command[1])
 		bg.Print(" ")
-		printCard(c)
-		bg.Print(" ")
+		for _, item := range command[2:] {
+			c, _ := processItem(item)
+			printCard(c)
+			bg.Print(" ")
+		}
 		fmt.Print(" at level ")
-		fmt.Println(command[2])
+		fmt.Println(command[1])
 	case "place":
 		fmt.Print("Player placed ")
 		var cs []card
