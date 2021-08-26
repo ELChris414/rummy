@@ -73,9 +73,9 @@ func whatColor(c string) int {
 		return 2
 	case "r", "red":
 		return 3
-	case "jb", "jokerblack":
+	case "jb", "jokerblack", "bj":
 		return 4
-	case "jr", "jokerred":
+	case "jr", "jokerred", "rj":
 		return 5
 	}
 	return -1
@@ -131,14 +131,14 @@ func sortHand(h []card) []card {
 
 func processItem(item string) (card, int) {
 	// Normal items:
-	// b_11
+	// b-11
 	// Empty jokers:
 	// jr
 	// Signed jokers:
-	// jr_y_8
+	// jr-y-8
 	var c card
 	c.joker = 0
-	items := strings.Split(item, "_")
+	items := strings.Split(item, "-")
 	l := len(items)
 	if l > 3 {
 		return c, 1
