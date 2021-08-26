@@ -8,55 +8,66 @@ import (
 	"github.com/inancgumus/screen"
 )
 
-func add(items []string, to string, h []card, b [][]card) (bool, []card, [][]card) {
+func add(items []string, to string, h []card, b [][]card, ho []card) (bool, []card, [][]card, []card) {
+	var cs []card
 	num, err := strconv.Atoi(to)
 	if err != nil {
-		return false, h, b
+		return false, h, b, ho
 	}
 	num--
 	if num < 0 || num >= len(b) {
-		return false, h, b
+		return false, h, b, ho
 	}
 	for _, item := range items {
 		c, fail := processItem(item)
 		if fail == 1 {
-			return false, h, b
+			return false, h, b, ho
 		}
-		if isIn(c, h) == -1 {
-			return false, h, b
-		}
+		cs = append(cs, c)
 		b[num] = append(b[num], c)
 	}
 	b[num] = sortHand(b[num])
-	if isValid(b[num]) {
-		return true, h, b
+	if !isValid(b[num]) {
+		return false, h, b, ho
 	}
-	return false, h, b
+	for _, c := range cs {
+		if isIn(c, h) != -1 {
+			h = remove(h, c)
+		} else if isIn(c, ho) != -1 {
+			ho = remove(ho, c)
+		} else {
+			return false, h, b, ho
+		}
+	}
+	return true, h, b, ho
 }
 
-func place(items []string, h []card, b [][]card) (bool, []card, [][]card, int) {
+func place(items []string, h []card, b [][]card, ho []card) (bool, []card, [][]card, []card, int) {
 	var cs []card
 	tot := 0
 	for _, item := range items {
 		c, fail := processItem(item)
 		if fail == 1 {
-			return false, h, b, tot
-		}
-		if isIn(c, h) == -1 {
-			return false, h, b, tot
+			return false, h, b, ho, tot
 		}
 		cs = append(cs, c)
 	}
 	cs = sortHand(cs)
-	if isValid(cs) {
-		for _, c := range cs {
+	if !isValid(cs) {
+		return false, h, b, ho, tot
+	}
+	for _, c := range cs {
+		if isIn(c, h) != -1 {
 			h = remove(h, c)
 			tot += c.number
+		} else if isIn(c, ho) != -1 {
+			ho = remove(ho, c)
+		} else {
+			return false, h, b, ho, tot
 		}
-		b = append(b, cs)
-		return true, h, b, tot
 	}
-	return false, h, b, tot
+	b = append(b, cs)
+	return true, h, b, ho, tot
 }
 
 func draw() {

@@ -158,7 +158,7 @@ func playTurn() bool {
 				break
 			}
 			items := command[2:]
-			success, h, b = add(items, command[1], h, b)
+			success, h, b, ho = add(items, command[1], h, b, ho)
 			if success {
 				actions = append(actions, action)
 				cpHand = append(cpHand, sortHand(h))
@@ -175,7 +175,7 @@ func playTurn() bool {
 				break
 			}
 			items := command[1:]
-			success, h, b, tot = place(items, h, b)
+			success, h, b, ho, tot = place(items, h, b, ho)
 			if success {
 				actions = append(actions, action)
 				cpHand = append(cpHand, sortHand(h))

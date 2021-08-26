@@ -52,7 +52,6 @@ func printCards(cards []card) {
 		printCard(cards[i])
 		bg.Print(" ")
 	}
-	fmt.Println()
 }
 
 func printCard(c card) {
