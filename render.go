@@ -32,11 +32,13 @@ func renderBoard(b [][]card) {
 		counter.Printf("%v: ", i+1)
 		printCards(b[i])
 	}
+	fmt.Println()
 }
 
 func renderHand(cards []card) {
 	fmt.Println("\nPlayer's hand:")
 	printCards(cards)
+	fmt.Println()
 }
 
 func renderHold(cards []card) {
@@ -44,6 +46,7 @@ func renderHold(cards []card) {
 		fmt.Println("\nPlayer's hold:")
 		printCards(cards)
 	}
+	fmt.Println()
 }
 
 func printCards(cards []card) {
@@ -122,6 +125,7 @@ func printAction(action string) {
 			cs = append(cs, c)
 		}
 		printCards(cs)
+		fmt.Println()
 	case "exchange":
 		fmt.Print("Player exchanged ")
 		c, _ := processItem(command[1])
