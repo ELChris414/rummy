@@ -118,12 +118,6 @@ func sortHand(h []card) []card {
 	// First by color, then by ascending number
 	// Last cards are jokers
 	sort.Slice(h, func(i, j int) bool {
-		return h[i].joker != 0
-	})
-	sort.Slice(h, func(i, j int) bool {
-		/*if h[i].joker != 0 || h[j].joker != 0 {
-			return false
-		}*/
 		if h[i].color < h[j].color {
 			return true
 		} else if h[i].color > h[j].color {

@@ -27,7 +27,8 @@ func add(items []string, to string, h []card, b [][]card) (bool, []card, [][]car
 		}
 		b[num] = append(b[num], c)
 	}
-	if isValid(sortHand(b[num])) {
+	b[num] = sortHand(b[num])
+	if isValid(b[num]) {
 		return true, h, b
 	}
 	return false, h, b
@@ -46,6 +47,7 @@ func place(items []string, h []card, b [][]card) (bool, []card, [][]card, int) {
 		}
 		cs = append(cs, c)
 	}
+	cs = sortHand(cs)
 	if isValid(cs) {
 		for _, c := range cs {
 			h = remove(h, c)
