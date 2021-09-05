@@ -8,6 +8,13 @@ import (
 	"github.com/inancgumus/screen"
 )
 
+/*
+	TODO:
+	I've noticed that when you have a card both in your hold and in your hand, you may want to choose from where
+	you want to utilize the card. In reality, hold is always preffered so you can close out a move, but
+	having the option is better.
+*/
+
 func add(items []string, to string, h []card, b [][]card, ho []card) (bool, []card, [][]card, []card) {
 	var cs []card
 	num, err := strconv.Atoi(to)
@@ -110,4 +117,31 @@ func exchange(item string, to string, h []card, b [][]card, ho []card) (bool, []
 	b[num][i].joker = 0
 	ho = append(ho, cleanJoker(cjok))
 	return true, h, b, ho
+}
+
+func pick(items []string, from string, b [][]card, ho []card) (bool, [][]card, []card) {
+	num, err := strconv.Atoi(from)
+	if err != nil {
+		return false, b, ho
+	}
+	num--
+	if num < 0 || num >= len(b) {
+		return false, b, ho
+	}
+	for _, item := range items {
+		c, fail := processItem(item)
+		if fail == 1 {
+			return false, b, ho
+		}
+		i := isIn(c, b[num])
+		if i == -1 {
+			return false, b, ho
+		}
+		b[num] = removei(b[num], i)
+		ho = append(ho, c)
+	}
+	if !isValid(b[num]) {
+		return false, b, ho
+	}
+	return true, b, ho
 }

@@ -7,8 +7,7 @@ import (
 )
 
 func removei(s []card, i int) []card {
-	s[i] = s[len(s)-1]
-	return s[:len(s)-1]
+	return append(s[:i], s[i+1:]...)
 }
 
 func remove(s []card, c card) []card {

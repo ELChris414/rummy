@@ -103,15 +103,12 @@ func playTurn() bool {
 	var actions []string
 	var total []int = []int{0}
 	var tot int
-	var h []card
-	var ho []card
-	var b [][]card
 
 	cpBoard = append(cpBoard, board)
 	cpHand = append(cpHand, hands[turn])
 
 	for {
-		screen.Clear()
+		//screen.Clear()
 		fmt.Printf("Currently playing: Player %s\n", playerLet[turn])
 		fmt.Printf("Cards on board: %v\n", len(pool))
 		fmt.Printf("Round: %v\n\n", rounds)
@@ -138,9 +135,9 @@ func playTurn() bool {
 		action = strings.ToLower(action)
 		command := strings.Split(action, " ")
 
-		h = make([]card, len(cpHand[len(cpHand)-1]))
-		b = make([][]card, len(cpBoard[len(cpBoard)-1]))
-		ho = make([]card, len(hold[len(hold)-1]))
+		h := make([]card, len(cpHand[len(cpHand)-1]))
+		b := make([][]card, len(cpBoard[len(cpBoard)-1]))
+		ho := make([]card, len(hold[len(hold)-1]))
 
 		copy(h, cpHand[len(cpHand)-1])
 		copy(b, cpBoard[len(cpBoard)-1])
@@ -234,6 +231,27 @@ func playTurn() bool {
 			if success {
 				actions = append(actions, action)
 				cpHand = append(cpHand, sortHand(h))
+				cpBoard = append(cpBoard, b)
+				total = append(total, total[len(total)-1])
+				hold = append(hold, ho)
+				fmt.Println()
+			} else {
+				fmt.Println("Incorrect arguments.")
+			}
+		case "pick":
+			if total[len(total)-1] < 30 && !laid[turn] {
+				fmt.Println("Initial placements not done yet.")
+				break
+			}
+			if len(command) < 3 {
+				fmt.Println("Insufficient amount of arguments.")
+				break
+			}
+			items := command[2:]
+			success, b, ho = pick(items, command[1], b, ho)
+			if success {
+				actions = append(actions, action)
+				cpHand = append(cpHand, h)
 				cpBoard = append(cpBoard, b)
 				total = append(total, total[len(total)-1])
 				hold = append(hold, ho)

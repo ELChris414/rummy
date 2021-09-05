@@ -31,6 +31,7 @@ func renderBoard(b [][]card) {
 	for i := 0; i < len(b); i++ {
 		counter.Printf("%v: ", i+1)
 		printCards(b[i])
+		fmt.Println()
 	}
 	fmt.Println()
 }
@@ -134,6 +135,16 @@ func printAction(action string) {
 		bg.Print(" ")
 		fmt.Print(" with the joker at level ")
 		fmt.Println(command[2])
+	case "pick":
+		fmt.Print("Player picked ")
+		var cs []card
+		for _, item := range command[2:] {
+			c, _ := processItem(item)
+			cs = append(cs, c)
+		}
+		printCards(cs)
+		fmt.Print(" from level ")
+		fmt.Println(command[1])
 	}
 	// For pick it must show the whole sequence of num card card card
 	// So example: Player grabbed [card] from [num] [card] [card] [card]
