@@ -259,6 +259,10 @@ func playTurn() bool {
 				fmt.Println("Incorrect arguments.")
 			}
 		case "pickall":
+			if total[len(total)-1] < 30 && !laid[turn] {
+				fmt.Println("Initial placements not done yet.")
+				break
+			}
 			if len(command) != 2 {
 				fmt.Println("Insufficient amount of arguments.")
 				break
@@ -270,6 +274,26 @@ func playTurn() bool {
 				cpBoard = append(cpBoard, b)
 				total = append(total, total[len(total)-1])
 				hold = append(hold, sortHand(ho))
+				fmt.Println()
+			} else {
+				fmt.Println("Incorrect arguments.")
+			}
+		case "break":
+			if total[len(total)-1] < 30 && !laid[turn] {
+				fmt.Println("Initial placements not done yet.")
+				break
+			}
+			if len(command) != 3 {
+				fmt.Println("Insufficient amount of arguments.")
+				break
+			}
+			success, b = breakLevel(command[1], command[2], b)
+			if success {
+				actions = append(actions, action)
+				cpHand = append(cpHand, h)
+				cpBoard = append(cpBoard, b)
+				total = append(total, total[len(total)-1])
+				hold = append(hold, ho)
 				fmt.Println()
 			} else {
 				fmt.Println("Incorrect arguments.")

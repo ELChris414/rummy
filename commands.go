@@ -170,3 +170,26 @@ func pickall(from string, b [][]card, ho []card) (bool, [][]card, []card) {
 	b = removeBi(b, num)
 	return true, b, ho
 }
+
+func breakLevel(level string, on string, b [][]card) (bool, [][]card) {
+	num, err := strconv.Atoi(level)
+	if err != nil {
+		return false, b
+	}
+	num--
+	if num < 0 || num >= len(b) {
+		return false, b
+	}
+	point, err := strconv.Atoi(on)
+	if err != nil {
+		return false, b
+	}
+	if point < 3 || point >= len(b[num])-2 {
+		return false, b
+	}
+	left := b[num][point:]
+	right := b[num][:point]
+	b[num] = left
+	b = append(b, right)
+	return true, b
+}

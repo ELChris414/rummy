@@ -116,8 +116,7 @@ func printAction(action string) {
 			cs = append(cs, c)
 		}
 		printCards(cs)
-		fmt.Print(" at level ")
-		fmt.Println(command[1])
+		fmt.Printf(" at level %s\n", command[1])
 	case "place":
 		fmt.Print("Player placed ")
 		var cs []card
@@ -130,9 +129,7 @@ func printAction(action string) {
 	case "exchange":
 		fmt.Print("Player exchanged ")
 		c, _ := processItem(command[1])
-		bg.Print(" ")
-		printCard(c)
-		bg.Print(" ")
+		printCardF(c)
 		fmt.Print(" with the joker at level ")
 		fmt.Println(command[2])
 	case "pick":
@@ -143,14 +140,20 @@ func printAction(action string) {
 			cs = append(cs, c)
 		}
 		printCards(cs)
-		fmt.Print(" from level ")
-		fmt.Println(command[1])
+		fmt.Printf(" from level %s\n", command[1])
 	case "pickall":
-		fmt.Print("Player picked all cards from level ")
-		fmt.Println(command[1])
+		fmt.Printf("Player picked all cards from level %s\n", command[1])
+	case "break":
+		fmt.Printf("Player broke level %s at point %s\n", command[1], command[2])
 	}
 	// For pick it must show the whole sequence of num card card card
 	// So example: Player grabbed [card] from [num] [card] [card] [card]
+}
+
+func printCardF(c card) {
+	bg.Print(" ")
+	printCard(c)
+	bg.Print(" ")
 }
 
 func renderScores(scores []int) {
