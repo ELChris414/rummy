@@ -145,6 +145,9 @@ func printAction(action string) {
 		printCards(cs)
 		fmt.Print(" from level ")
 		fmt.Println(command[1])
+	case "pickall":
+		fmt.Print("Player picked all cards from level ")
+		fmt.Println(command[1])
 	}
 	// For pick it must show the whole sequence of num card card card
 	// So example: Player grabbed [card] from [num] [card] [card] [card]

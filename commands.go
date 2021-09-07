@@ -57,7 +57,6 @@ func add(items []string, to string, h []card, b [][]card, ho []card) (bool, []ca
 func place(items []string, h []card, b [][]card, ho []card) (bool, []card, [][]card, []card, int) {
 	var cs []card
 	tot := 0
-	fmt.Println(h)
 	for _, item := range items {
 		c, fail := processItem(item)
 		if fail == 1 {
@@ -155,5 +154,19 @@ func pick(items []string, from string, b [][]card, ho []card) (bool, [][]card, [
 		return false, b, ho
 	}
 	b[num] = bn
+	return true, b, ho
+}
+
+func pickall(from string, b [][]card, ho []card) (bool, [][]card, []card) {
+	num, err := strconv.Atoi(from)
+	if err != nil {
+		return false, b, ho
+	}
+	num--
+	if num < 0 || num >= len(b) {
+		return false, b, ho
+	}
+	ho = append(ho, b[num]...)
+	b = removeBi(b, num)
 	return true, b, ho
 }

@@ -14,6 +14,11 @@ func remove(s []card, c card) []card {
 	i := isIn(c, s)
 	return removei(s, i)
 }
+
+func removeBi(b [][]card, i int) [][]card {
+	return append(b[:i], b[i+1:]...)
+}
+
 func isIn(c card, h []card) int {
 	for i, a := range h {
 		if c == a {

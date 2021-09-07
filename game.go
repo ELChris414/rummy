@@ -253,7 +253,23 @@ func playTurn() bool {
 				cpHand = append(cpHand, h)
 				cpBoard = append(cpBoard, b)
 				total = append(total, total[len(total)-1])
-				hold = append(hold, ho)
+				hold = append(hold, sortHand(ho))
+				fmt.Println()
+			} else {
+				fmt.Println("Incorrect arguments.")
+			}
+		case "pickall":
+			if len(command) != 2 {
+				fmt.Println("Insufficient amount of arguments.")
+				break
+			}
+			success, b, ho = pickall(command[1], b, ho)
+			if success {
+				actions = append(actions, action)
+				cpHand = append(cpHand, h)
+				cpBoard = append(cpBoard, b)
+				total = append(total, total[len(total)-1])
+				hold = append(hold, sortHand(ho))
 				fmt.Println()
 			} else {
 				fmt.Println("Incorrect arguments.")
