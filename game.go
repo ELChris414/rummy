@@ -17,7 +17,7 @@ type card struct {
 }
 
 const (
-	initialCards = 40
+	initialCards = 14
 )
 
 var (
@@ -102,15 +102,21 @@ func playTurn() bool {
 	var actions []string
 	var total []int = []int{0}
 	var tot int
+	var err string
 
 	cpBoard = append(cpBoard, board)
 	cpHand = append(cpHand, hands[turn])
 
 	for {
-		//screen.Clear()
+		screen.Clear()
 		fmt.Printf("Currently playing: Player %s\n", playerLet[turn])
 		fmt.Printf("Cards on board: %v\n", len(pool))
 		fmt.Printf("Round: %v\n\n", rounds)
+		if err != "" {
+			fmt.Println(err)
+			fmt.Println()
+			err = ""
+		}
 		renderBoard(cpBoard[len(cpBoard)-1])
 		renderActions(actions, total[len(total)-1])
 		renderHand(cpHand[len(cpHand)-1])
@@ -146,11 +152,11 @@ func playTurn() bool {
 		switch command[0] {
 		case "add":
 			if total[len(total)-1] < 30 && !laid[turn] {
-				fmt.Println("Initial placements not done yet.")
+				err = "Initial placements not done yet."
 				break
 			}
 			if len(command) < 3 {
-				fmt.Println("Insufficient amount of arguments.")
+				err = "Insufficient amount of arguments."
 				break
 			}
 			items := command[2:]
@@ -163,11 +169,11 @@ func playTurn() bool {
 				hold = append(hold, ho)
 				fmt.Println()
 			} else {
-				fmt.Println("Incorrect arguments.")
+				err = "Incorrect arguments."
 			}
 		case "place":
 			if len(command) < 3 {
-				fmt.Println("Insufficient amount of arguments.")
+				err = "Insufficient amount of arguments."
 				break
 			}
 			items := command[1:]
@@ -180,7 +186,7 @@ func playTurn() bool {
 				hold = append(hold, ho)
 				fmt.Println()
 			} else {
-				fmt.Println("Incorrect arguments.")
+				err = "Incorrect arguments."
 			}
 		case "undo":
 			actions = actions[:len(actions)-1]
@@ -188,25 +194,25 @@ func playTurn() bool {
 			cpBoard = cpBoard[:len(cpBoard)-1]
 			total = total[:len(total)-1]
 			hold = hold[:len(hold)-1]
-			fmt.Println("Undid last step.")
+			err = "Undid last step."
 		case "restart":
 			actions = actions[:0]
 			cpHand = cpHand[:1]
 			cpBoard = cpBoard[:1]
 			total = total[:1]
 			hold = hold[:1]
-			fmt.Println("Restarted.")
+			err = "Restarted."
 		case "draw":
 			if !isPoolEmpty() {
 				draw()
 				return true
 			} else {
-				fmt.Println("No more cards in the pool!")
+				err = "No more cards in the pool!"
 			}
 		case "done":
 			if len(hold[len(hold)-1]) == 0 && len(cpHand) != 1 {
 				if total[len(total)-1] < 30 && !laid[turn] {
-					fmt.Println("Initial placements not done yet.")
+					err = "Initial placements not done yet."
 					break
 				} else {
 					hands[turn] = cpHand[len(cpHand)-1]
@@ -215,15 +221,15 @@ func playTurn() bool {
 					return true
 				}
 			} else {
-				fmt.Println("You're not permitted to finish yet.")
+				err = "You're not permitted to finish yet."
 			}
 		case "exchange":
 			if total[len(total)-1] < 30 && !laid[turn] {
-				fmt.Println("Initial placements not done yet.")
+				err = "Initial placements not done yet."
 				break
 			}
 			if len(command) != 3 {
-				fmt.Println("Insufficient amount of arguments.")
+				err = "Insufficient amount of arguments."
 				break
 			}
 			success, h, b, ho = exchange(command[1], command[2], h, b, ho)
@@ -235,15 +241,15 @@ func playTurn() bool {
 				hold = append(hold, ho)
 				fmt.Println()
 			} else {
-				fmt.Println("Incorrect arguments.")
+				err = "Incorrect arguments."
 			}
 		case "pick":
 			if total[len(total)-1] < 30 && !laid[turn] {
-				fmt.Println("Initial placements not done yet.")
+				err = "Initial placements not done yet."
 				break
 			}
 			if len(command) < 3 {
-				fmt.Println("Insufficient amount of arguments.")
+				err = "Insufficient amount of arguments."
 				break
 			}
 			items := command[2:]
@@ -256,15 +262,15 @@ func playTurn() bool {
 				hold = append(hold, sortHand(ho))
 				fmt.Println()
 			} else {
-				fmt.Println("Incorrect arguments.")
+				err = "Incorrect arguments."
 			}
 		case "pickall":
 			if total[len(total)-1] < 30 && !laid[turn] {
-				fmt.Println("Initial placements not done yet.")
+				err = "Initial placements not done yet."
 				break
 			}
 			if len(command) != 2 {
-				fmt.Println("Insufficient amount of arguments.")
+				err = "Insufficient amount of arguments."
 				break
 			}
 			success, b, ho = pickall(command[1], b, ho)
@@ -276,15 +282,15 @@ func playTurn() bool {
 				hold = append(hold, sortHand(ho))
 				fmt.Println()
 			} else {
-				fmt.Println("Incorrect arguments.")
+				err = "Incorrect arguments."
 			}
 		case "break":
 			if total[len(total)-1] < 30 && !laid[turn] {
-				fmt.Println("Initial placements not done yet.")
+				err = "Initial placements not done yet."
 				break
 			}
 			if len(command) != 3 {
-				fmt.Println("Insufficient amount of arguments.")
+				err = "Insufficient amount of arguments."
 				break
 			}
 			success, b = breakLevel(command[1], command[2], b)
@@ -296,10 +302,10 @@ func playTurn() bool {
 				hold = append(hold, ho)
 				fmt.Println()
 			} else {
-				fmt.Println("Incorrect arguments.")
+				err = "Incorrect arguments."
 			}
 		default:
-			fmt.Println("Incorrect command, try again.")
+			err = "Incorrect command, try again."
 		}
 	}
 }
