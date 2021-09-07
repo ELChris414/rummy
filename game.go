@@ -31,9 +31,8 @@ var (
 )
 
 func setupCards() {
-	colors := []int{0, 1, 2, 3}
 	for i := 1; i < 14; i++ {
-		for _, c := range colors {
+		for c := 0; c < 4; c++ {
 			pool = append(pool, card{c, i, 0})
 			pool = append(pool, card{c, i, 0})
 		}
@@ -135,9 +134,9 @@ func playTurn() bool {
 		action = strings.ToLower(action)
 		command := strings.Split(action, " ")
 
-		h := make([]card, len(cpHand[len(cpHand)-1]))
-		b := make([][]card, len(cpBoard[len(cpBoard)-1]))
-		ho := make([]card, len(hold[len(hold)-1]))
+		var h = make([]card, len(cpHand[len(cpHand)-1]))
+		var b = make([][]card, len(cpBoard[len(cpBoard)-1]))
+		var ho = make([]card, len(hold[len(hold)-1]))
 
 		copy(h, cpHand[len(cpHand)-1])
 		copy(b, cpBoard[len(cpBoard)-1])

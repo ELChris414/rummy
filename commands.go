@@ -25,16 +25,20 @@ func add(items []string, to string, h []card, b [][]card, ho []card) (bool, []ca
 	if num < 0 || num >= len(b) {
 		return false, h, b, ho
 	}
+
+	var bn = make([]card, len(b[num]))
+	copy(bn, b[num])
+
 	for _, item := range items {
 		c, fail := processItem(item)
 		if fail == 1 {
 			return false, h, b, ho
 		}
 		cs = append(cs, c)
-		b[num] = append(b[num], c)
+		bn = append(bn, c)
 	}
-	b[num] = sortHand(b[num])
-	if !isValid(b[num]) {
+	bn = sortHand(bn)
+	if !isValid(bn) {
 		return false, h, b, ho
 	}
 	for _, c := range cs {
@@ -46,21 +50,25 @@ func add(items []string, to string, h []card, b [][]card, ho []card) (bool, []ca
 			return false, h, b, ho
 		}
 	}
+	b[num] = bn
 	return true, h, b, ho
 }
 
 func place(items []string, h []card, b [][]card, ho []card) (bool, []card, [][]card, []card, int) {
 	var cs []card
 	tot := 0
+	fmt.Println(h)
 	for _, item := range items {
 		c, fail := processItem(item)
 		if fail == 1 {
+			fmt.Println("Process failed")
 			return false, h, b, ho, tot
 		}
 		cs = append(cs, c)
 	}
 	cs = sortHand(cs)
 	if !isValid(cs) {
+		fmt.Println("Validity failed")
 		return false, h, b, ho, tot
 	}
 	for _, c := range cs {
@@ -70,6 +78,7 @@ func place(items []string, h []card, b [][]card, ho []card) (bool, []card, [][]c
 		} else if isIn(c, ho) != -1 {
 			ho = remove(ho, c)
 		} else {
+			fmt.Println("In failed")
 			return false, h, b, ho, tot
 		}
 	}
@@ -128,20 +137,23 @@ func pick(items []string, from string, b [][]card, ho []card) (bool, [][]card, [
 	if num < 0 || num >= len(b) {
 		return false, b, ho
 	}
+	var bn = make([]card, len(b[num]))
+	copy(bn, b[num])
 	for _, item := range items {
 		c, fail := processItem(item)
 		if fail == 1 {
 			return false, b, ho
 		}
-		i := isIn(c, b[num])
+		i := isIn(c, bn)
 		if i == -1 {
 			return false, b, ho
 		}
-		b[num] = removei(b[num], i)
+		bn = removei(bn, i)
 		ho = append(ho, c)
 	}
-	if !isValid(b[num]) {
+	if !isValid(bn) {
 		return false, b, ho
 	}
+	b[num] = bn
 	return true, b, ho
 }
